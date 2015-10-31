@@ -1,0 +1,17 @@
+{
+    "auto_save_interval": "5000",
+    "socket_port": "3235",
+    "password": "3cchat2015",
+    "ip": "127.0.0.1",
+    "linked_servers": [{
+        "socket_port": "2235",
+        "password": "2cchat2015",
+        "ip": "127.0.0.1",
+        "http_port": "2234"
+    }],
+    "auto_connect_interval": "1000",
+    "user_filename": "user3.json",
+    "ttl": "4",
+    "http_port": "3234",
+    "message_filename": "message3.json"
+}

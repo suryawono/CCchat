@@ -1,0 +1,18 @@
+{
+    "auto_save_interval": "5000",
+    "socket_port": "7879",
+    "password": "1cchat2015",
+    "ip": "192.168.1.101",
+    "linked_servers": [{
+        "socket_port": "7879",
+        "password": "2cchat2015",
+        "ip": "192.168.1.109",
+        "sessionid": "aa38c780c4e89913acc7335133ae9ff298d84fa5fd9ef05deadd8f06fe949375",
+        "http_port": "7878"
+    }],
+    "auto_connect_interval": "1000",
+    "user_filename": "user1.json",
+    "ttl": "4",
+    "http_port": "7878",
+    "message_filename": "message1.json"
+}
