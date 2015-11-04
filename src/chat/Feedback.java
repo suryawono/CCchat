@@ -20,6 +20,7 @@ public class Feedback {
     public static int LOGIN_GAGAL = 4;
     public static int MESSAGE_SENT = 5;
     public static int NEED_AUTH = 6;
+    public static int SUDAH_LOGIN = 8;
     public static int LOGOUT_SUCCESS = 7;
     public static int INVALID_PARAMS = 66;
     public static int OK = 10;
@@ -36,6 +37,7 @@ public class Feedback {
         STATUS_MESSAGE[INVALID_PARAMS] = "Parameter salah";
         STATUS_MESSAGE[LOGOUT_SUCCESS] = "Logout berhasil";
         STATUS_MESSAGE[OK] = "OK";
+        STATUS_MESSAGE[SUDAH_LOGIN] = "Sudah Login";
     }
 
     public volatile long currentQ;

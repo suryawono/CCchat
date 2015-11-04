@@ -8,8 +8,15 @@
             "socket_port": "1235",
             "password": "1cchat2015",
             "ip": "127.0.0.1",
-			"sessionid":"",
+            "sessionid": "",
             "http_port": "1234"
+        },
+        {
+            "socket_port": "3235",
+            "password": "3cchat2015",
+            "ip": "127.0.0.1",
+            "sessionid": "cde0cf5c3003f33be099d9137445aa5c9a7399032a7594b9943535a8c298122c",
+            "http_port": "3234"
         }
     ],
     "auto_connect_interval": "1000",

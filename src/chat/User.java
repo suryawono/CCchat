@@ -17,11 +17,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -31,6 +31,7 @@ import org.json.JSONObject;
 public class User {
 
     private HashMap<String, JSONObject> users;
+    public static long max = 30000;
 
     public User() throws IOException {
         this.users = new HashMap();
@@ -69,6 +70,7 @@ public class User {
             o.put("password", this.hashPassword(password, encodedSalt));
             o.put("sessionid", "");
             o.put("login_time", "");
+            o.put("last_activity_time", "-1");
             o.put("salt", encodedSalt);
             this.users.put(username, o);
             return new JSONObject().put("username", username).put("password", this.hashPassword(password, encodedSalt)).put("salt", encodedSalt).put("register_time", Long.toString(time));
@@ -82,15 +84,20 @@ public class User {
             String salt = o.getString("salt");
             String hashedPassword = o.getString("password");
             if (hashedPassword.equals(this.hashPassword(password, salt))) {
-                final Random r = new SecureRandom();
-                byte[] ssid = new byte[32];
-                r.nextBytes(ssid);
-                String encodedSSID = String.format("%064x", new java.math.BigInteger(1, ssid));
-                this.users.get(username).put("sessionid", encodedSSID);
                 Date date = new Date();
                 long time = date.getTime();
-                this.users.get(username).put("login_time", Long.toString(time));
-                return new JSONObject().put("username", username).put("sessionid", encodedSSID).put("login_time", Long.toString(time));
+                if (this.users.get(username).get("sessionid") == "" || time > this.users.get(username).getLong("last_activity_time") + User.max) {
+                    final Random r = new SecureRandom();
+                    byte[] ssid = new byte[32];
+                    r.nextBytes(ssid);
+                    String encodedSSID = String.format("%064x", new java.math.BigInteger(1, ssid));
+                    this.users.get(username).put("sessionid", encodedSSID);
+                    this.users.get(username).put("login_time", Long.toString(time));
+                    this.users.get(username).put("last_activity_time", Long.toString(time));
+                    return new JSONObject().put("username", username).put("sessionid", encodedSSID).put("login_time", Long.toString(time)).put("last_activity_time", Long.toString(time));
+                } else {
+                    return new JSONObject().put("status", Feedback.SUDAH_LOGIN);
+                }
             }
         }
         return null;
@@ -119,6 +126,7 @@ public class User {
     public String isValidSessionid(String sessionid) {
         for (Map.Entry<String, JSONObject> entry : this.users.entrySet()) {
             if (entry.getValue().getString("sessionid").equals(sessionid)) {
+                this.users.get(entry.getKey()).put("last_activity_time", new Date().getTime());
                 return entry.getKey();
             }
         }
@@ -143,14 +151,16 @@ public class User {
             o.put("sessionid", "");
             o.put("login_time", "");
             o.put("salt", salt);
+            o.put("last_activity_time", "-1");
             this.users.put(username, o);
         }
     }
 
-    public void appendLogin(String username, String token, long loginTime) {
+    public void appendLogin(String username, String token, long loginTime,long lastActivityTime) {
         if (this.users.containsKey(username)) {
             this.users.get(username).put("sessionid", token);
             this.users.get(username).put("login_time", loginTime);
+            this.users.get(username).put("last_activity_time", lastActivityTime);
         }
     }
 
@@ -160,4 +170,36 @@ public class User {
         }
     }
 
+    public JSONArray getClientList() {
+        JSONArray r = new JSONArray();
+        for (Map.Entry<String, JSONObject> pair : this.users.entrySet()) {
+            r.put(new JSONObject().put(pair.getKey(), pair.getValue()));
+        }
+        return r;
+    }
+
+    public void syncUser(JSONArray users) {
+        this.users.clear();
+        for (Object o : users) {
+            JSONObject user = (JSONObject) o;
+            for (String key : user.keySet()) {
+                this.users.put(key, user.getJSONObject(key));
+            }
+        }
+    }
+
+    public JSONObject getOnlineList() {
+        JSONObject r = new JSONObject();
+        r.put("users", new JSONArray());
+        Date date = new Date();
+        long time = date.getTime();
+        for (Map.Entry<String, JSONObject> pair : this.users.entrySet()) {
+            JSONObject userDetail = pair.getValue();
+            String username = pair.getKey();
+            if (userDetail.getString("sessionid") != "" && userDetail.getLong("last_activity_time") + User.max > time) {
+                r.optJSONArray("users").put(new JSONObject().put("username", username));
+            }
+        }
+        return r;
+    }
 }

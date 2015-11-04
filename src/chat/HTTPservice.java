@@ -29,6 +29,7 @@ public class HTTPservice implements HttpHandler {
         OutputStream responseBody = exchange.getResponseBody();
         Headers responseHeaders = exchange.getResponseHeaders();
         responseHeaders.set("Content-Type", "text/json");
+        responseHeaders.set("Access-Control-Allow-Origin", "*");
         int code = 200;
         JSONObject r = new JSONObject();
         if (requestMethod.equalsIgnoreCase("POST")) {
@@ -48,6 +49,7 @@ public class HTTPservice implements HttpHandler {
             commandList.add("register");
             commandList.add("login");
             commandList.add("getMessage");
+            commandList.add("getOnlineList");
             commandList.add("logout");
             commandList.add("registerServer");
             commandList.add("loginServer");

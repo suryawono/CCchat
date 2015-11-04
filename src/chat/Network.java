@@ -63,7 +63,6 @@ public class Network implements Runnable {
                             connection.getOutputStream());
                     wr.write(body.toString().getBytes());
                     wr.close();
-                    System.out.println(body);
                     //Get Response  
                     InputStream is = connection.getInputStream();
                     BufferedReader rd = new BufferedReader(new InputStreamReader(is));
@@ -74,7 +73,6 @@ public class Network implements Runnable {
                     }
                     rd.close();
                     JSONObject responsejson = new JSONObject(response.toString());
-                    System.out.println(responsejson);
                 } catch (Exception e) {
                     Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
                 } finally {

@@ -17,6 +17,8 @@ public class SCommand {
     public static final int LOGIN_CLIENT = 2;
     public static final int SEND_CHAT_CLIENT = 4;
     public static final int LOGOUT_CLIENT = 8;
+    public static final int CLIENT_LIST = 16;
+    public static final int MESSAGE_LIST = 32;
     public static final String[] COMMAND_NAME = new String[64];
 
     static {
@@ -24,6 +26,8 @@ public class SCommand {
         COMMAND_NAME[LOGIN_CLIENT] = "loginClient";
         COMMAND_NAME[SEND_CHAT_CLIENT] = "sendClientChat";
         COMMAND_NAME[LOGOUT_CLIENT] = "logoutClient";
+        COMMAND_NAME[CLIENT_LIST] = "getClientList";
+        COMMAND_NAME[MESSAGE_LIST] = "getMessageList";
     }
 
     private int type;

@@ -30,14 +30,14 @@ import org.json.JSONWriter;
  * @author CIA
  */
 public class Message {
-
+    
     private PriorityQueue<MessageEntity> messages;
-
+    
     public Message() throws IOException {
         this.messages = new PriorityQueue();
         this.readDB();
     }
-
+    
     private void readDB() throws FileNotFoundException, IOException {
         FileReader fileReader = null;
         File file = new File(Server.message_filename);
@@ -57,25 +57,25 @@ public class Message {
             }
         }
     }
-
+    
     private void writeDB() throws FileNotFoundException {
         PrintWriter pw = new PrintWriter(Server.message_filename);
         new JSONObject().put("messages", this.messages).write(pw);
         pw.close();
     }
-
+    
     public JSONObject putMessage(String username, String message) {
         Date date = new Date();
         long timestamp = date.getTime();
         this.messages.offer(new MessageEntity(timestamp, username, message));
         return new JSONObject().put("username", username).put("message", message).put("timestamp", timestamp);
     }
-
+    
     @Override
     public String toString() {
         return this.messages.toString();
     }
-
+    
     public void save() {
         try {
             this.writeDB();
@@ -83,7 +83,7 @@ public class Message {
             Logger.getLogger(User.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
     public JSONArray getMessage(long timestamp) {
         JSONArray messageList = new JSONArray();
         this.messages.stream().filter((me) -> (Long.compare(me.getTimestamp(), timestamp) > 0)).forEach((MessageEntity me) -> {
@@ -91,7 +91,7 @@ public class Message {
         });
         return messageList;
     }
-
+    
     public void appendMessage(MessageEntity me) {
         for (MessageEntity e : this.messages) {
             if (me.isIdentic(e)) {
@@ -99,5 +99,13 @@ public class Message {
             }
         }
         this.messages.offer(me);
+    }
+    
+    public void syncMessage(JSONArray messages) {
+        this.messages.clear();
+        for (Object o : messages) {
+            JSONObject message = (JSONObject) o;
+            this.messages.offer(new MessageEntity(message.getLong("timestamp"), message.getString("username"), message.getString("message")));
+        }
     }
 }
