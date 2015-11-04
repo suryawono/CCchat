@@ -176,6 +176,18 @@ public class Executor implements Runnable {
                                     result.put("data", new JSONObject());
                                 }
                                 break;
+                            case "getClientList":
+                                JSONArray clients;
+                                if ((clients = this.getClientList()) != null) {
+                                    result.put("status", Feedback.OK);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
+                                    result.put("data", new JSONObject().put("clients", clients));
+                                } else {
+                                    result.put("status", Feedback.NEED_AUTH);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
+                                    result.put("data", new JSONObject());
+                                }
+                                break;
                         }
                     } catch (JSONException j) {
                         String e = j.toString();
@@ -293,5 +305,9 @@ public class Executor implements Runnable {
         if (ttl > 0) {
             Server.server.scommandQueue.offer(new SCommand(type, o, ttl));
         }
+    }
+
+    public JSONArray getClientList() {
+        return null;
     }
 }
