@@ -11,9 +11,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -23,7 +26,10 @@ import org.json.JSONObject;
 public class HandShaker implements Runnable {
 
     private boolean isReady = false;
-    private int sleep=10;
+    private int sleep = 10;
+    public static boolean isUserSync = false;
+    public static boolean isMessageSync = false;
+    private boolean connectionTryMade = false;
 
     @Override
     public void run() {
@@ -31,21 +37,45 @@ public class HandShaker implements Runnable {
             try {
                 if (Server.server.serverList != null && !isReady) {
                     System.out.println("Server ready...");
-                    this.isReady=true;
-                    this.sleep=Server.auto_connect_interval;
+                    this.isReady = true;
+                    this.sleep = Server.auto_connect_interval;
                 }
                 for (Map.Entry pair : Server.server.serverList.entrySet()) {
+                    this.connectionTryMade = true;
                     JSONObject o = (JSONObject) pair.getValue();
-                    //login
                     if (o.getString("sessionid").equals("")) {
                         JSONObject login_r = this.doLogin(o.getString("ip"), o.getString("http_port"), o.getString("password"));
                         if (login_r != null) {
                             o.put("sessionid", login_r.getJSONObject("data").getString("sessionid"));
+                            if (this.isReady && !HandShaker.isUserSync) {
+                                System.out.println("Sync user...");
+                                JSONObject user_r = this.getUserList(o.getString("sessionid"), o.getString("ip"), o.getString("http_port"));
+                                if (user_r.getInt("status") == Feedback.OK) {
+                                    Server.server.user.syncUser(user_r.getJSONObject("data").getJSONArray("clients"));
+                                    HandShaker.isUserSync = true;
+                                }
+                            }
+                            if (this.isReady && !HandShaker.isMessageSync) {
+                                System.out.println("Sync message...");
+                                JSONObject message_r = this.getMessageList(o.getString("sessionid"), o.getString("ip"), o.getString("http_port"));
+                                if (message_r.getInt("status") == Feedback.OK) {
+                                    Server.server.message.syncMessage(message_r.getJSONObject("data").getJSONArray("messages"));
+                                    HandShaker.isMessageSync = true;
+                                }
+                            }
                         }
                     } else {
-                        this.doRegister(o.getString("sessionid"), o.getString("ip"), o.getString("http_port"), Server.ip, Integer.toString(Server.http_port), Integer.toString(Server.socket_port), Server.password);
+                        if (this.doRegister(o.getString("sessionid"), o.getString("ip"), o.getString("http_port"), Server.ip, Integer.toString(Server.http_port), Integer.toString(Server.socket_port), Server.password) != null) {
+
+                        } else {
+                            o.put("sessionid", "");
+                        }
                     }
-                    //register
+
+                }
+                if (this.connectionTryMade && isReady) {
+                    HandShaker.isMessageSync = true;
+                    HandShaker.isUserSync = true;
                 }
             } catch (NullPointerException e) {
             }
@@ -137,4 +167,83 @@ public class HandShaker implements Runnable {
             }
         }
     }
+
+    public JSONObject getUserList(String sessionid, String ip_target, String port_target) {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL("http", ip_target, Integer.parseInt(port_target), "/");
+
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type",
+                    "application/json");
+            JSONObject body = new JSONObject();
+            body.put("command", "getClientList");
+            body.put("params", new JSONObject().put("ssessionid", sessionid));
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(
+                    connection.getOutputStream());
+            wr.write(body.toString().getBytes());
+            wr.close();
+
+            //Get Response  
+            InputStream is = connection.getInputStream();
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            StringBuilder response = new StringBuilder(); // or StringBuffer if not Java 5+ 
+            String line;
+            while ((line = rd.readLine()) != null) {
+                response.append(line);
+            }
+            rd.close();
+            JSONObject responsejson = new JSONObject(response.toString());
+            return responsejson;
+        } catch (Exception ex) {
+            return null;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    public JSONObject getMessageList(String sessionid, String ip_target, String port_target) {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL("http", ip_target, Integer.parseInt(port_target), "/");
+
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type",
+                    "application/json");
+            JSONObject body = new JSONObject();
+            body.put("command", "getMessageList");
+            body.put("params", new JSONObject().put("ssessionid", sessionid));
+            connection.setUseCaches(false);
+            connection.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(
+                    connection.getOutputStream());
+            wr.write(body.toString().getBytes());
+            wr.close();
+
+            //Get Response  
+            InputStream is = connection.getInputStream();
+            BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+            StringBuilder response = new StringBuilder(); // or StringBuffer if not Java 5+ 
+            String line;
+            while ((line = rd.readLine()) != null) {
+                response.append(line);
+            }
+            rd.close();
+            JSONObject responsejson = new JSONObject(response.toString());
+            return responsejson;
+        } catch (Exception ex) {
+            return null;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
 }

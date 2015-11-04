@@ -39,7 +39,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.USERNAME_TERDAFTAR);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.USERNAME_TERDAFTAR]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "login":
@@ -48,6 +48,10 @@ public class Executor implements Runnable {
                                     result.put("status", Feedback.LOGIN_GAGAL);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.LOGIN_GAGAL]);
                                     result.put("data", new JSONObject());
+                                } else if (login_r.has("status")) {
+                                    result.put("status", Feedback.SUDAH_LOGIN);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.SUDAH_LOGIN]);
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 } else {
                                     result.put("status", Feedback.LOGIN_BERHASIL);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.LOGIN_BERHASIL]);
@@ -65,7 +69,19 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
+                                }
+                                break;
+                            case "getOnlineList":
+                                JSONObject user_list = this.getOnlineList(c.getJsonobject().getString("sessionid"));
+                                if (user_list != null) {
+                                    result.put("status", Feedback.OK);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
+                                    result.put("data", user_list);
+                                } else {
+                                    result.put("status", Feedback.NEED_AUTH);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "logout":
@@ -78,7 +94,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "getMessage":
@@ -90,7 +106,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "registerServer":
@@ -101,7 +117,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "loginServer":
@@ -113,7 +129,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.LOGIN_GAGAL);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.LOGIN_GAGAL]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "logoutServer":
@@ -125,7 +141,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "registerClient":
@@ -137,11 +153,11 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "loginClient":
-                                if (this.loginClient(c.getJsonobject().getString("ssessionid"), c.getJsonobject().getString("username"), c.getJsonobject().getString("sessionid"), Long.parseLong(c.getJsonobject().getString("login_time")))) {
+                                if (this.loginClient(c.getJsonobject().getString("ssessionid"), c.getJsonobject().getString("username"), c.getJsonobject().getString("sessionid"), Long.parseLong(c.getJsonobject().getString("login_time")), c.getJsonobject().getLong("last_activity_time"))) {
                                     result.put("status", Feedback.OK);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
                                     result.put("data", new JSONObject());
@@ -149,7 +165,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "logoutClient":
@@ -161,7 +177,7 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "sendClientChat":
@@ -173,19 +189,31 @@ public class Executor implements Runnable {
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                             case "getClientList":
                                 JSONArray clients;
-                                if ((clients = this.getClientList()) != null) {
+                                if ((clients = this.getClientList(c.getJsonobject().getString("ssessionid"))) != null) {
                                     result.put("status", Feedback.OK);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
                                     result.put("data", new JSONObject().put("clients", clients));
                                 } else {
                                     result.put("status", Feedback.NEED_AUTH);
                                     result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
-                                    result.put("data", new JSONObject());
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
+                                }
+                                break;
+                            case "getMessageList":
+                                JSONArray messages2;
+                                if ((messages2 = this.getMessageList(c.getJsonobject().getString("ssessionid"), -1l)) != null) {
+                                    result.put("status", Feedback.OK);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
+                                    result.put("data", new JSONObject().put("messages", messages2));
+                                } else {
+                                    result.put("status", Feedback.NEED_AUTH);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
                         }
@@ -248,6 +276,14 @@ public class Executor implements Runnable {
         }
     }
 
+    public JSONArray getMessageList(String sessionid, long timestamp) {
+        if (Server.server.isValidSession(sessionid) == null) {
+            return null;
+        } else {
+            return Server.server.message.getMessage(timestamp);
+        }
+    }
+
     public boolean registerServer(String sessionid, String ip, int http_port, int socket_port, String password) {
         if (Server.server.isValidSession(sessionid) != null) {
             Server.server.registerServer(ip, http_port, socket_port, password);
@@ -274,9 +310,9 @@ public class Executor implements Runnable {
         }
     }
 
-    public boolean loginClient(String sessionid, String username, String token, long loginTime) {
+    public boolean loginClient(String sessionid, String username, String token, long loginTime, long lastActivityTime) {
         if (Server.server.isValidSession(sessionid) != null) {
-            Server.server.user.appendLogin(username, token, loginTime);
+            Server.server.user.appendLogin(username, token, loginTime, lastActivityTime);
             return true;
         } else {
             return false;
@@ -307,7 +343,20 @@ public class Executor implements Runnable {
         }
     }
 
-    public JSONArray getClientList() {
-        return null;
+    public JSONArray getClientList(String sessionid) {
+        if (Server.server.isValidSession(sessionid) != null) {
+            return Server.server.user.getClientList();
+        } else {
+            return null;
+        }
+    }
+
+    public JSONObject getOnlineList(String sessionid) {
+        String username = Server.server.user.isValidSessionid(sessionid);
+        if (username == null) {
+            return null;
+        } else {
+            return Server.server.user.getOnlineList();
+        }
     }
 }
