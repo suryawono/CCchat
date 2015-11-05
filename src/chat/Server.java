@@ -94,6 +94,9 @@ public class Server {
         network.start();
         Thread autosave = new Thread(new Autosave());
         autosave.start();
+        
+        Thread socketService = new Thread(new SocketService(socket_port));
+        socketService.start();
     }
 
     private void readConfiguration() throws FileNotFoundException, IOException {
