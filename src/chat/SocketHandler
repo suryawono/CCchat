@@ -8,9 +8,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SocketHandler extends Thread {
@@ -20,11 +17,15 @@ public class SocketHandler extends Thread {
     String jsonMessage;
     OutputStream out;
     InputStream in;
+    public BufferedWriter writer;
     int code = 200;
+    String sessionid;
+    SocketService socketService;
 
-    SocketHandler(Socket clientSocket) {
+    SocketHandler(Socket clientSocket, SocketService socketService) {
         super("SocketHandler");
         this.clientSocket = clientSocket;
+        this.socketService = socketService;
     }
 
     public void run() {
@@ -33,7 +34,7 @@ public class SocketHandler extends Thread {
             out = clientSocket.getOutputStream();
             in = clientSocket.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out));
+            writer = new BufferedWriter(new OutputStreamWriter(out));
             writer.write("test");
             writer.flush();
             reader.readLine();
@@ -63,12 +64,46 @@ public class SocketHandler extends Thread {
                         while ((r = Server.server.feedback.getResponse(q)) == null) {
                             Thread.sleep(10);
                         }
-
                     } else if (jsonObject.get("command").toString().equals("ping")) {
                         r.put("status", "alive");
                     }
-                    writer.write(r.toString());
-                    writer.flush();
+
+                    if (jsonObject.get("command").toString().equals("login")) {
+                        if (this.sessionid != null) {
+                            writer.write("Anda sudah login, silahkan logout terlebih dahulu \r\n");
+                        } else {
+                            writer.write(r.get("message").toString() + "\r\n");
+                            if (r.getJSONObject("data").get("sessionid") != null) {
+                                this.sessionid = r.getJSONObject("data").get("sessionid").toString();
+                                writer.write("WELCOME " + r.getJSONObject("data").get("username") + "\r\n");
+                            }
+                        }
+                        writer.flush();
+                    }
+
+                    if (jsonObject.get("command").toString().equals("sendMessage")) {
+                        String text = r.getJSONObject("data").get("username").toString() + ">" + r.getJSONObject("data").get("message").toString();
+                        socketService.sendToAll(text);
+                    }
+
+                    if (jsonObject.get("command").toString().equals("getOnlineList")) {
+                        writer.write("User(s) currently online: \r\n");
+                        for (int i = 0; i < r.getJSONObject("data").getJSONArray("users").length(); i++) {
+                            writer.write(r.getJSONObject("data").getJSONArray("users").optJSONObject(i).get("username").toString() + "\r\n");
+                        }
+                        writer.flush();
+                    }
+
+                    if (jsonObject.get("command").toString().equals("getMessage")) {
+                        writer.write(r.toString() + "\r\n");
+                        writer.flush();
+                        for (int i = 0; i < r.getJSONObject("data").getJSONArray("messages").length(); i++) {
+                            String text = r.getJSONObject("data").getJSONArray("messages").optJSONObject(i).get("username").toString() + ">" + r.getJSONObject("data").getJSONArray("messages").optJSONObject(i).get("message").toString() + "\r\n";
+                            writer.write(text);
+                        }
+                        writer.flush();
+                    }
+
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
@@ -91,7 +126,7 @@ public class SocketHandler extends Thread {
         build.append("{ ");
         switch (temp[0]) {
             case "register":
-                build.append("\"command\" : \"register \",");
+                build.append("\"command\" : \"register\",");
                 build.append("\"params\" : {");
                 build.append("\"username\": ");
                 build.append("\"" + temp[1] + "\",");
@@ -99,7 +134,7 @@ public class SocketHandler extends Thread {
                 build.append("\"" + temp[2] + "\"}");
                 break;
             case "login":
-                build.append("\"command\" : \"login \",");
+                build.append("\"command\" : \"login\",");
                 build.append("\"params\" : {");
                 build.append("\"username\": ");
                 build.append("\"" + temp[1] + "\",");
@@ -107,32 +142,32 @@ public class SocketHandler extends Thread {
                 build.append("\"" + temp[2] + "\"}");
                 break;
             case "sendMessage":
-                build.append("\"command\" : \"sendMessage \",");
+                build.append("\"command\" : \"sendMessage\",");
                 build.append("\"params\" : {");
                 build.append("\"sessionid\": ");
-                build.append("\"" + temp[1] + "\",");
+                build.append("\"" + sessionid + "\",");
                 build.append("\"message\": ");
-                build.append("\"" + temp[2] + "\"}");
+                build.append("\"" + temp[1] + "\"}");
                 break;
             case "getOnlineList":
-                build.append("\"command\" : \"getOnlineList \",");
+                build.append("\"command\" : \"getOnlineList\",");
                 build.append("\"params\" : {");
                 build.append("\"sessionid\": ");
-                build.append("\"" + temp[1] + "\"}");
+                build.append("\"" + sessionid + "\"}");
                 break;
             case "logout":
-                build.append("\"command\" : \"logout \",");
+                build.append("\"command\" : \"logout\",");
                 build.append("\"params\" : {");
                 build.append("\"sessionid\": ");
-                build.append("\"" + temp[1] + "\"}");
+                build.append("\"" + sessionid + "\"}");
                 break;
             case "getMessage":
-                build.append("\"command\" : \"getMessage \",");
+                build.append("\"command\" : \"getMessage\",");
                 build.append("\"params\" : {");
                 build.append("\"sessionid\": ");
-                build.append("\"" + temp[1] + "\",");
+                build.append("\"" + sessionid + "\",");
                 build.append("\"timestamp\": ");
-                build.append("\"" + temp[2] + "\"}");
+                build.append("\"" + temp[1] + "\"}");
                 break;
         }
         build.append(" }");
