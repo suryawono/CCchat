@@ -1,73 +1,47 @@
 package chat;
 
+import java.io.IOException;
 import java.io.*;
-import java.net.*;
-import java.util.Scanner;
+import java.net.ServerSocket;
+import java.net.Socket;
 
-public class Client {
+public class SocketService implements Runnable {
 
-    Socket requestSocket;
-    ObjectOutputStream out;
-    ObjectInputStream in;
+    ServerSocket providerSocket;
+    Socket connection = null;
+    OutputStream out;
+    InputStream in;
     String message;
-    boolean isConnectedtoServer;
-    int server_socket;
 
-    public Client() {
-        isConnectedtoServer = false;
+    public SocketService(int socket_port) throws IOException {
+        providerSocket = new ServerSocket(socket_port);
+        connection = null;
+
     }
 
-    void run() {
-        try {
-            Scanner sc = new Scanner(System.in);
-            if (!isConnectedtoServer) {
-                System.out.println("Insert server port");
-                server_socket = sc.nextInt();
-                requestSocket = new Socket("localhost", server_socket);
-            }
-
-            System.out.println("Connected to localhost in port" + server_socket);
-            out = new ObjectOutputStream(requestSocket.getOutputStream());
-            out.flush();
-            in = new ObjectInputStream(requestSocket.getInputStream());
-            do {
-                try {
-                    message = (String) in.readObject();
-                    System.out.println("server> " + message);
-                    sendMessage("Hi server");
-                    message = "test";
-                    sendMessage(message);
-                } catch (ClassNotFoundException classNot) {
-                    System.err.println("data received in unknown format");
-                }
-            } while (!message.equals("logout"));
-        } catch (UnknownHostException unknownHost) {
-            System.err.println("You are trying to connect to an unknown host!");
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        } finally {
+    @Override
+    public void run() {
+        while (true) {
             try {
+                connection = providerSocket.accept();
+                System.out.println("Client Connected!");
+                out = connection.getOutputStream();
+                in = connection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                do{
+                message = reader.readLine();
+                System.out.println(message);
+                }while(!message.equals("logout"));
                 in.close();
                 out.close();
-                requestSocket.close();
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
     }
 
-    void sendMessage(String msg) {
-        try {
-            out.writeObject(msg);
-            out.flush();
-            System.out.println("client>" + msg);
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        }
-    }
-
-    public static void main(String args[]) {
-        Client client = new Client();
-        client.run();
+    static String convertStreamToString(java.io.InputStream is) {
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
     }
 }
