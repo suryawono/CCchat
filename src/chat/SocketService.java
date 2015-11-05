@@ -4,44 +4,49 @@ import java.io.IOException;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class SocketService implements Runnable {
 
     ServerSocket providerSocket;
     Socket connection = null;
-    OutputStream out;
-    InputStream in;
-    String message;
+    int socket_port;
+     private ArrayList<SocketHandler> clientList;
 
     public SocketService(int socket_port) throws IOException {
-        providerSocket = new ServerSocket(socket_port);
-        connection = null;
-
+        this.socket_port = socket_port;
+        clientList = new ArrayList();
     }
 
     @Override
     public void run() {
         while (true) {
+            boolean listeningSocket = true;
             try {
-                connection = providerSocket.accept();
-                System.out.println("Client Connected!");
-                out = connection.getOutputStream();
-                in = connection.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-                do{
-                message = reader.readLine();
-                System.out.println(message);
-                }while(!message.equals("logout"));
-                in.close();
-                out.close();
-            } catch (Exception ex) {
-                ex.printStackTrace();
+                providerSocket = new ServerSocket(socket_port);
+            } catch (IOException e) {
+                System.err.println("Could not listen on port: " + socket_port);
+            }
+
+            connection = null;
+
+            while (listeningSocket) {
+                try {
+                    Socket clientSocket = providerSocket.accept();
+                    SocketHandler h = new SocketHandler(clientSocket);
+                    clientList.add(h);
+                    h.start();                    
+                } catch (IOException ex) {
+                    Logger.getLogger(SocketService.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            try {
+                providerSocket.close();
+            } catch (IOException ex) {
+                Logger.getLogger(SocketService.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }
-
-    static String convertStreamToString(java.io.InputStream is) {
-        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
-        return s.hasNext() ? s.next() : "";
     }
 }
