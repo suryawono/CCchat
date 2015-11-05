@@ -12,7 +12,7 @@
     }],
     "auto_connect_interval": "1000",
     "user_filename": "user3.json",
-    "ttl": "4",
+    "ttl": "2",
     "http_port": "3234",
     "message_filename": "message3.json"
 }

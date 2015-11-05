@@ -19,7 +19,8 @@ public class SCommand {
     public static final int LOGOUT_CLIENT = 8;
     public static final int CLIENT_LIST = 16;
     public static final int MESSAGE_LIST = 32;
-    public static final String[] COMMAND_NAME = new String[64];
+    public static final int CLIENT_ACTIVITY_TIME = 64;
+    public static final String[] COMMAND_NAME = new String[255];
 
     static {
         COMMAND_NAME[REGISTRASI_CLIENT] = "registerClient";
@@ -28,6 +29,7 @@ public class SCommand {
         COMMAND_NAME[LOGOUT_CLIENT] = "logoutClient";
         COMMAND_NAME[CLIENT_LIST] = "getClientList";
         COMMAND_NAME[MESSAGE_LIST] = "getMessageList";
+        COMMAND_NAME[CLIENT_ACTIVITY_TIME] = "updateCAT";
     }
 
     private int type;

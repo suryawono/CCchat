@@ -6,7 +6,7 @@
     "linked_servers": [],
     "auto_connect_interval": "1000",
     "user_filename": "user1.json",
-    "ttl": "4",
+    "ttl": "2",
     "http_port": "1234",
     "message_filename": "message1.json"
 }

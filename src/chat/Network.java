@@ -38,7 +38,6 @@ public class Network implements Runnable {
             } catch (Exception e) {
                 Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
             }
-
         }
     }
 
@@ -49,7 +48,7 @@ public class Network implements Runnable {
             } else {
                 HttpURLConnection connection = null;
                 try {
-                    System.out.println("Propate to "+o.getString("ip")+":"+o.getString("http_port"));
+                    System.out.println("Propate "+body.getString("command")+" to "+o.getString("ip")+":"+o.getString("http_port"));
                     URL url = new URL("http", o.getString("ip"), Integer.parseInt(o.getString("http_port")), "/");
 
                     body.getJSONObject("params").put("ssessionid", o.getString("sessionid"));
@@ -73,6 +72,7 @@ public class Network implements Runnable {
                     }
                     rd.close();
                     JSONObject responsejson = new JSONObject(response.toString());
+                    System.out.println(responsejson);
                 } catch (Exception e) {
                     Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
                 } finally {

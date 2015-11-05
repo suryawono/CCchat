@@ -31,7 +31,7 @@ import org.json.JSONObject;
 public class User {
 
     private HashMap<String, JSONObject> users;
-    public static long max = 30000;
+    public static long maxIdlemaxIdle = 10000;
 
     public User() throws IOException {
         this.users = new HashMap();
@@ -86,7 +86,7 @@ public class User {
             if (hashedPassword.equals(this.hashPassword(password, salt))) {
                 Date date = new Date();
                 long time = date.getTime();
-                if (this.users.get(username).get("sessionid") == "" || time > this.users.get(username).getLong("last_activity_time") + User.max) {
+                if (this.users.get(username).get("sessionid") == "" || time > this.users.get(username).getLong("last_activity_time") + User.maxIdlemaxIdle) {
                     final Random r = new SecureRandom();
                     byte[] ssid = new byte[32];
                     r.nextBytes(ssid);
@@ -126,6 +126,7 @@ public class User {
     public String isValidSessionid(String sessionid) {
         for (Map.Entry<String, JSONObject> entry : this.users.entrySet()) {
             if (entry.getValue().getString("sessionid").equals(sessionid)) {
+                Server.server.scommandQueue.offer(new SCommand(SCommand.CLIENT_ACTIVITY_TIME, new JSONObject().put("username", entry.getKey()).put("last_activity_time", new Date().getTime()), Server.ttl));
                 this.users.get(entry.getKey()).put("last_activity_time", new Date().getTime());
                 return entry.getKey();
             }
@@ -156,7 +157,7 @@ public class User {
         }
     }
 
-    public void appendLogin(String username, String token, long loginTime,long lastActivityTime) {
+    public void appendLogin(String username, String token, long loginTime, long lastActivityTime) {
         if (this.users.containsKey(username)) {
             this.users.get(username).put("sessionid", token);
             this.users.get(username).put("login_time", loginTime);
@@ -196,10 +197,17 @@ public class User {
         for (Map.Entry<String, JSONObject> pair : this.users.entrySet()) {
             JSONObject userDetail = pair.getValue();
             String username = pair.getKey();
-            if (userDetail.getString("sessionid") != "" && userDetail.getLong("last_activity_time") + User.max > time) {
+            if (userDetail.getString("sessionid") != "" && userDetail.getLong("last_activity_time") + User.maxIdlemaxIdle > time) {
                 r.optJSONArray("users").put(new JSONObject().put("username", username));
             }
         }
         return r;
+    }
+
+    public void updateCAT(String username, long last_activity_time) {
+        JSONObject d = this.users.get(username);
+        if (Long.compare(d.getLong("last_activity_time"), last_activity_time) < 0) {
+            d.put("last_activity_time", last_activity_time);
+        }
     }
 }
