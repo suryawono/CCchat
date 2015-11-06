@@ -49,4 +49,11 @@ public class SocketService implements Runnable {
             }
         }
     }
+    
+    public void sendToAll(String message) throws IOException{
+        for(int i=0; i < clientList.size(); i++){
+            clientList.get(i).writer.write(message + "\r\n");
+            clientList.get(i).writer.flush();
+        }
+    }
 }
