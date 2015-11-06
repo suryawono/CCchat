@@ -56,49 +56,54 @@ public class SocketHandler extends Thread {
                 commandList.add("registerServer");
                 commandList.add("loginServer");
                 commandList.add("logoutServer");
+                System.out.println(jsonObject);
                 try {
-                    if (commandList.contains(jsonObject.get("command").toString())) {
+                    if (commandList.contains(jsonObject.getString("command"))) {
                         q = Server.server.feedback.getQueueNumber();
                         int ttl = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : 0;
-                        Server.server.commandQueue.add(new Command(jsonObject.get("command").toString(), (JSONObject) jsonObject.get("params"), q, ttl));
+                        Server.server.commandQueue.add(new Command(jsonObject.getString("command"), jsonObject.getJSONObject("params"), q, ttl));
                         while ((r = Server.server.feedback.getResponse(q)) == null) {
                             Thread.sleep(10);
                         }
-                    } else if (jsonObject.get("command").toString().equals("ping")) {
+                    } else if (jsonObject.getString("command").equals("ping")) {
                         r.put("status", "alive");
                     }
-
-                    if (jsonObject.get("command").toString().equals("login")) {
+                    System.out.println(r);
+                    switch (r.getInt("status")) {
+                        default:
+                            writer.write(r.getString("message") + "\r\n");
+                            writer.flush();
+                    }
+                    if (jsonObject.getString("command").equals("login")) {
                         if (this.sessionid != null) {
                             writer.write("Anda sudah login, silahkan logout terlebih dahulu \r\n");
                         } else {
-                            writer.write(r.get("message").toString() + "\r\n");
-                            if (r.getJSONObject("data").get("sessionid") != null) {
-                                this.sessionid = r.getJSONObject("data").get("sessionid").toString();
-                                writer.write("WELCOME " + r.getJSONObject("data").get("username") + "\r\n");
+                            writer.write(r.getString("message") + "\r\n");
+                            if (r.getInt("status") != 4) {
+                                this.sessionid = r.getJSONObject("data").getString("sessionid");
+                                writer.write("WELCOME " + r.getJSONObject("data").getString("username") + "\r\n");
                             }
                         }
                         writer.flush();
                     }
 
-                    if (jsonObject.get("command").toString().equals("sendMessage")) {
-                        String text = r.getJSONObject("data").get("username").toString() + ">" + r.getJSONObject("data").get("message").toString();
+                    if (jsonObject.getString("command").equals("sendMessage")) {
+                        String text = r.getJSONObject("data").getString("username") + ">" + r.getJSONObject("data").getString("message");
                         socketService.sendToAll(text);
                     }
 
-                    if (jsonObject.get("command").toString().equals("getOnlineList")) {
+                    if (jsonObject.getString("command").equals("getOnlineList")) {
                         writer.write("User(s) currently online: \r\n");
                         for (int i = 0; i < r.getJSONObject("data").getJSONArray("users").length(); i++) {
-                            writer.write(r.getJSONObject("data").getJSONArray("users").optJSONObject(i).get("username").toString() + "\r\n");
+                            writer.write(r.getJSONObject("data").getJSONArray("users").optJSONObject(i).getString("username") + "\r\n");
                         }
                         writer.flush();
                     }
 
-                    if (jsonObject.get("command").toString().equals("getMessage")) {
-                        writer.write(r.toString() + "\r\n");
+                    if (jsonObject.getString("command").equals("getMessage")) {
                         writer.flush();
                         for (int i = 0; i < r.getJSONObject("data").getJSONArray("messages").length(); i++) {
-                            String text = r.getJSONObject("data").getJSONArray("messages").optJSONObject(i).get("username").toString() + ">" + r.getJSONObject("data").getJSONArray("messages").optJSONObject(i).get("message").toString() + "\r\n";
+                            String text = r.getJSONObject("data").getJSONArray("messages").optJSONObject(i).getString("username") + ">" + r.getJSONObject("data").getJSONArray("messages").optJSONObject(i).getString("message") + "\r\n";
                             writer.write(text);
                         }
                         writer.flush();
@@ -110,6 +115,7 @@ public class SocketHandler extends Thread {
             } while (!message.equals("logout"));
             in.close();
             out.close();
+            this.clientSocket.close();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

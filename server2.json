@@ -3,22 +3,13 @@
     "socket_port": "2235",
     "password": "2cchat2015",
     "ip": "127.0.0.1",
-    "linked_servers": [
-        {
-            "socket_port": "1235",
-            "password": "1cchat2015",
-            "ip": "127.0.0.1",
-            "sessionid": "",
-            "http_port": "1234"
-        },
-        {
-            "socket_port": "3235",
-            "password": "3cchat2015",
-            "ip": "127.0.0.1",
-            "sessionid": "861ff3133e5e4c7f9e7663b442358a460a224f4512fa5012ae4f0ccfef8b56ea",
-            "http_port": "3234"
-        }
-    ],
+    "linked_servers": [{
+        "socket_port": "1235",
+        "password": "1cchat2015",
+        "ip": "127.0.0.1",
+        "sessionid": "",
+        "http_port": "1234"
+    }],
     "auto_connect_interval": "1000",
     "user_filename": "user2.json",
     "ttl": "2",
