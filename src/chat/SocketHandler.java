@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 import org.json.JSONObject;
 
 public class SocketHandler extends Thread {
@@ -21,6 +22,7 @@ public class SocketHandler extends Thread {
     int code = 200;
     String sessionid;
     SocketService socketService;
+    SocketMessageBroadcaster smb;
 
     SocketHandler(Socket clientSocket, SocketService socketService) {
         super("SocketHandler");
@@ -82,6 +84,9 @@ public class SocketHandler extends Thread {
                             if (r.getInt("status") != 4) {
                                 this.sessionid = r.getJSONObject("data").getString("sessionid");
                                 writer.write("WELCOME " + r.getJSONObject("data").getString("username") + "\r\n");
+                                this.smb = new SocketMessageBroadcaster(sessionid, writer, new Date().getTime());
+                                Thread tsmb=new Thread(this.smb);
+                                tsmb.start();
                             }
                         }
                         writer.flush();

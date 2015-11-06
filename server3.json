@@ -7,7 +7,7 @@
         "socket_port": "2235",
         "password": "2cchat2015",
         "ip": "127.0.0.1",
-		"sessionid":"",
+        "sessionid": "",
         "http_port": "2234"
     }],
     "auto_connect_interval": "1000",

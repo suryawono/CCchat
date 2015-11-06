@@ -44,6 +44,7 @@ public class Server {
     public static String user_filename;
     public Executor[] executor;
     public HTTPservice httpservice;
+    public SocketService socketservice;
     public JSONObject registeredUser;
     public Message message;
     public User user;
@@ -90,12 +91,13 @@ public class Server {
             Thread tExecutor = new Thread(this.executor[i]);
             tExecutor.start();
         }
-        Thread network=new Thread(new Network());
+        Thread network = new Thread(new Network());
         network.start();
         Thread autosave = new Thread(new Autosave());
         autosave.start();
-        
-        Thread socketService = new Thread(new SocketService(socket_port));
+
+        this.socketservice = new SocketService(socket_port);
+        Thread socketService = new Thread(this.socketservice);
         socketService.start();
     }
 
@@ -127,7 +129,7 @@ public class Server {
 
     public void registerServer(String ip, int http_port, int socket_port, String password) {
         if (!this.serverList.containsKey(ip + ":" + http_port)) {
-            JSONObject s = new JSONObject().put("ip", ip).put("http_port", Integer.toString(http_port)).put("socket_port", Integer.toString(socket_port)).put("password", password).put("sessionid","");
+            JSONObject s = new JSONObject().put("ip", ip).put("http_port", Integer.toString(http_port)).put("socket_port", Integer.toString(socket_port)).put("password", password).put("sessionid", "");
             this.config.optJSONArray("linked_servers").put(s);
             this.serverList.put(s.getString("ip") + ":" + s.getString("http_port"), s);
         }

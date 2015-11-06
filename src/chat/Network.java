@@ -72,7 +72,6 @@ public class Network implements Runnable {
                     }
                     rd.close();
                     JSONObject responsejson = new JSONObject(response.toString());
-                    System.out.println(responsejson);
                 } catch (Exception e) {
                     Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
                 } finally {
