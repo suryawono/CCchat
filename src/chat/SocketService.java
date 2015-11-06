@@ -13,7 +13,7 @@ public class SocketService implements Runnable {
     ServerSocket providerSocket;
     Socket connection = null;
     int socket_port;
-     private ArrayList<SocketHandler> clientList;
+    private ArrayList<SocketHandler> clientList;
 
     public SocketService(int socket_port) throws IOException {
         this.socket_port = socket_port;
@@ -35,7 +35,7 @@ public class SocketService implements Runnable {
             while (listeningSocket) {
                 try {
                     Socket clientSocket = providerSocket.accept();
-                    SocketHandler h = new SocketHandler(clientSocket);
+                    SocketHandler h = new SocketHandler(clientSocket,this);
                     clientList.add(h);
                     h.start();                    
                 } catch (IOException ex) {
@@ -56,4 +56,6 @@ public class SocketService implements Runnable {
             clientList.get(i).writer.flush();
         }
     }
+    
+    
 }

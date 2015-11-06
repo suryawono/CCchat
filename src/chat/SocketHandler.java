@@ -35,7 +35,7 @@ public class SocketHandler extends Thread {
             in = clientSocket.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             writer = new BufferedWriter(new OutputStreamWriter(out));
-            writer.write("test");
+            writer.write("welcome, press enter to begin...");
             writer.flush();
             reader.readLine();
             do {
