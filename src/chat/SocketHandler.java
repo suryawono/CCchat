@@ -58,7 +58,6 @@ public class SocketHandler extends Thread {
                 commandList.add("registerServer");
                 commandList.add("loginServer");
                 commandList.add("logoutServer");
-                System.out.println(jsonObject);
                 try {
                     if (commandList.contains(jsonObject.getString("command"))) {
                         q = Server.server.feedback.getQueueNumber();
@@ -70,7 +69,6 @@ public class SocketHandler extends Thread {
                     } else if (jsonObject.getString("command").equals("ping")) {
                         r.put("status", "alive");
                     }
-                    System.out.println(r);
                     switch (r.getInt("status")) {
                         default:
                             writer.write(r.getString("message") + "\r\n");
@@ -78,14 +76,12 @@ public class SocketHandler extends Thread {
                     }
                     if (jsonObject.getString("command").equals("login")) {
                         if (this.sessionid != null) {
-                            writer.write("Anda sudah login, silahkan logout terlebih dahulu \r\n");
                         } else {
-                            writer.write(r.getString("message") + "\r\n");
                             if (r.getInt("status") != 4) {
                                 this.sessionid = r.getJSONObject("data").getString("sessionid");
                                 writer.write("WELCOME " + r.getJSONObject("data").getString("username") + "\r\n");
                                 this.smb = new SocketMessageBroadcaster(sessionid, writer, new Date().getTime());
-                                Thread tsmb=new Thread(this.smb);
+                                Thread tsmb = new Thread(this.smb);
                                 tsmb.start();
                             }
                         }
@@ -94,7 +90,6 @@ public class SocketHandler extends Thread {
 
                     if (jsonObject.getString("command").equals("sendMessage")) {
                         String text = r.getJSONObject("data").getString("username") + ">" + r.getJSONObject("data").getString("message");
-                        socketService.sendToAll(text);
                     }
 
                     if (jsonObject.getString("command").equals("getOnlineList")) {
