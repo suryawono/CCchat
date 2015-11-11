@@ -15,13 +15,13 @@
             "socket_port": "3235",
             "password": "3cchat2015",
             "ip": "127.0.0.1",
-            "sessionid": "cde0cf5c3003f33be099d9137445aa5c9a7399032a7594b9943535a8c298122c",
+            "sessionid": "6e18b7a0a01f0d5da00a033a7bcdc7d3a3aa5217316e07cdc44685ffc32b427b",
             "http_port": "3234"
         }
     ],
     "auto_connect_interval": "1000",
     "user_filename": "user2.json",
-    "ttl": "4",
+    "ttl": "2",
     "http_port": "2234",
     "message_filename": "message2.json"
 }

@@ -216,6 +216,18 @@ public class Executor implements Runnable {
                                     result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
+                            case "updateCAT":
+                                if (this.updateCAT(c.getJsonobject().getString("ssessionid"), c.getJsonobject().getString("username"), c.getJsonobject().getLong("last_activity_time"))) {
+                                    result.put("status", Feedback.OK);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
+                                    result.put("data", new JSONObject());
+                                    this.addSCommand(SCommand.CLIENT_ACTIVITY_TIME, c.getJsonobject(), c.getTtl() - 1);
+                                } else {
+                                    result.put("status", Feedback.NEED_AUTH);
+                                    result.put("message", Feedback.STATUS_MESSAGE[Feedback.NEED_AUTH]);
+                                    result.put("data", new JSONObject().put("commandrequest", c.getName()));
+                                }
+                                break;
                         }
                     } catch (JSONException j) {
                         String e = j.toString();
@@ -357,6 +369,15 @@ public class Executor implements Runnable {
             return null;
         } else {
             return Server.server.user.getOnlineList();
+        }
+    }
+
+    public boolean updateCAT(String sessionid, String username, long last_activity_time) {
+        if (Server.server.isValidSession(sessionid) != null) {
+            Server.server.user.updateCAT(username, last_activity_time);
+            return true;
+        } else {
+            return false;
         }
     }
 }

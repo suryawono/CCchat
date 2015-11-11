@@ -7,12 +7,12 @@
         "socket_port": "2235",
         "password": "2cchat2015",
         "ip": "127.0.0.1",
-        "sessionid": "cd6740e103b062279c396364dd7a1ccc125a42a2cc14c75659fc418cc8ad7792",
+        "sessionid": "9c3529bcb9d28444748e3fbd0b7cf579e069004f6f8a69c6344b131c43ca830b",
         "http_port": "2234"
     }],
     "auto_connect_interval": "1000",
     "user_filename": "user1.json",
-    "ttl": "4",
+    "ttl": "2",
     "http_port": "1234",
     "message_filename": "message1.json"
 }

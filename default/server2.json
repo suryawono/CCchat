@@ -14,7 +14,7 @@
     ],
     "auto_connect_interval": "1000",
     "user_filename": "user2.json",
-    "ttl": "4",
+    "ttl": "2",
     "http_port": "2234",
     "message_filename": "message2.json"
 }
