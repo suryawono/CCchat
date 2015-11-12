@@ -9,7 +9,11 @@ public class Checker implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(1000);
+                System.out.println("Network:" + Server.server.network.isAlive());
+                System.out.println("Autosave:" + Server.server.autosave.isAlive());
+                System.out.println("SocketService:" + Server.server.socketServiceThread.isAlive());
+                System.out.println("Handshaker:" + Server.server.handshaker.isAlive());
                 if (!Server.server.network.isAlive()) {
                     Thread temp = new Thread(new Network());
                     temp.start();
@@ -19,11 +23,6 @@ public class Checker implements Runnable {
                     Thread temp = new Thread(new Autosave());
                     temp.start();
                     Server.server.autosave = temp;
-                }
-                if (!Server.server.network.isAlive()) {
-                    Thread temp = new Thread(new Network());
-                    temp.start();
-                    Server.server.network = temp;
                 }
                 if (!Server.server.socketServiceThread.isAlive()) {
                     Thread temp = new Thread(new SocketService(Server.server.socketservice.socket_port));

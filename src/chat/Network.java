@@ -22,10 +22,14 @@ import org.json.JSONObject;
  */
 public class Network implements Runnable {
 
-    public boolean isAlive = true;
-
     @Override
     public void run() {
+        while (true) {
+            this.loop();
+        }
+    }
+
+    public void loop() {
         while (true) {
             try {
                 Thread.sleep(10);
@@ -47,6 +51,7 @@ public class Network implements Runnable {
     public void send(JSONObject body) {
         for (Map.Entry pair : Server.server.serverList.entrySet()) {
             JSONObject o = (JSONObject) pair.getValue();
+            System.out.println(o);
             if (o.getString("sessionid").equals("")) {
             } else {
                 HttpURLConnection connection = null;
@@ -61,6 +66,7 @@ public class Network implements Runnable {
                             "application/json");
                     connection.setUseCaches(false);
                     connection.setDoOutput(true);
+                    connection.setConnectTimeout(5000);
                     DataOutputStream wr = new DataOutputStream(
                             connection.getOutputStream());
                     wr.write(body.toString().getBytes());
@@ -75,6 +81,7 @@ public class Network implements Runnable {
                     }
                     rd.close();
                     JSONObject responsejson = new JSONObject(response.toString());
+                    System.out.println(responsejson);
                 } catch (Exception e) {
                     Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
                 } finally {

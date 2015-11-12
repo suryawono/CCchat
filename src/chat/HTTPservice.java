@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONException;
@@ -59,8 +60,13 @@ public class HTTPservice implements HttpHandler {
                     q = Server.server.feedback.getQueueNumber();
                     int ttl = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : 0;
                     Server.server.commandQueue.add(new Command(jsonObject.get("command").toString(), (JSONObject) jsonObject.get("params"), q, ttl));
+                    long startFeedback = new Date().getTime();
                     while ((r = Server.server.feedback.getResponse(q)) == null) {
                         Thread.sleep(10);
+                        if (startFeedback + 5000 < new Date().getTime()) {
+                            r = new JSONObject();
+                            break;
+                        }
                     }
                 } else if (jsonObject.get("command").toString().equals("ping")) {
                     r.put("status", "alive");

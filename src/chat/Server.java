@@ -78,7 +78,7 @@ public class Server {
         this.user = new User();
         this.message = new Message();
         this.feedback = new Feedback();
-        this.tExecutor = new Thread [executorNum];
+        this.tExecutor = new Thread[executorNum];
 
         InetSocketAddress addr = new InetSocketAddress(Server.http_port);
         HttpServer httpservice = HttpServer.create(addr, 0);
@@ -91,7 +91,7 @@ public class Server {
         this.handshaker = new Thread(new HandShaker());
         handshaker.start();
 
-        this.tExecutor=new Thread[this.executor.length];
+        this.tExecutor = new Thread[this.executor.length];
         for (int i = 0; i < this.executor.length; i++) {
             this.executor[i] = new Executor();
             tExecutor[i] = new Thread(this.executor[i]);
