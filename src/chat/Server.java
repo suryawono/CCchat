@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -91,8 +90,10 @@ public class Server {
             Thread tExecutor = new Thread(this.executor[i]);
             tExecutor.start();
         }
+
         Thread network = new Thread(new Network());
         network.start();
+
         Thread autosave = new Thread(new Autosave());
         autosave.start();
 
@@ -103,8 +104,7 @@ public class Server {
 
     private void readConfiguration() throws FileNotFoundException, IOException {
         FileReader fileReader = new FileReader(Server.configuration_filename);
-        BufferedReader bufferedReader
-                = new BufferedReader(fileReader);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
         String jsonString = "";
         String line = null;
         while ((line = bufferedReader.readLine()) != null) {
@@ -167,5 +167,10 @@ public class Server {
 
     public String logout(String sessionId) {
         return this.connectedFrom.remove(sessionId);
+    }
+
+    public void restartNetworkThread() {
+        Thread network = new Thread(new Network());
+        network.start();
     }
 }
