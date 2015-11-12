@@ -10,10 +10,10 @@ public class Checker implements Runnable {
         while (true) {
             try {
                 Thread.sleep(1000);
-                System.out.println("Network:" + Server.server.network.isAlive());
-                System.out.println("Autosave:" + Server.server.autosave.isAlive());
-                System.out.println("SocketService:" + Server.server.socketServiceThread.isAlive());
-                System.out.println("Handshaker:" + Server.server.handshaker.isAlive());
+//                System.out.println("Network:" + Server.server.network.isAlive());
+//                System.out.println("Autosave:" + Server.server.autosave.isAlive());
+//                System.out.println("SocketService:" + Server.server.socketServiceThread.isAlive());
+//                System.out.println("Handshaker:" + Server.server.handshaker.isAlive());
                 if (!Server.server.network.isAlive()) {
                     Thread temp = new Thread(new Network());
                     temp.start();
