@@ -1,5 +1,8 @@
 package chat;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class Checker implements Runnable {
 
     @Override
@@ -30,8 +33,11 @@ public class Checker implements Runnable {
                     }
 
                 }
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 Server.server.restartChecker();
+                Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
+            } catch (Exception e){
+                Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
             }
         }
     }
