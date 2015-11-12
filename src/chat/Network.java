@@ -21,6 +21,8 @@ import org.json.JSONObject;
  * @author CIA
  */
 public class Network implements Runnable {
+    
+    public boolean isAlive = true;
 
     @Override
     public void run() {
@@ -35,7 +37,7 @@ public class Network implements Runnable {
                     body.put("ttl", sc.getTtl());
                     this.send(body);
                 }
-            } catch (Exception e) {
+            }  catch (Exception e) {                
                 Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
             }
         }
@@ -48,7 +50,7 @@ public class Network implements Runnable {
             } else {
                 HttpURLConnection connection = null;
                 try {
-                    System.out.println("Propate "+body.getString("command")+" to "+o.getString("ip")+":"+o.getString("http_port"));
+                    System.out.println("Propate " + body.getString("command") + " to " + o.getString("ip") + ":" + o.getString("http_port"));
                     URL url = new URL("http", o.getString("ip"), Integer.parseInt(o.getString("http_port")), "/");
 
                     body.getJSONObject("params").put("ssessionid", o.getString("sessionid"));
@@ -84,5 +86,4 @@ public class Network implements Runnable {
         }
 
     }
-
 }

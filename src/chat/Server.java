@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -52,6 +51,12 @@ public class Server {
     public HashMap<String, JSONObject> serverList;
     public JSONObject config;
     public HashMap<String, String> connectedFrom;
+    public Thread handshaker;
+    public Thread network;
+    public Thread autosave;
+    public Thread socketServiceThread;
+    public Thread checker;
+    public Thread[] tExecutor;
 
     /**
      * @param args the command line arguments
@@ -59,7 +64,6 @@ public class Server {
     public static void main(String[] args) throws IOException {
         Server.configuration_filename = args[0];
         Server.server = new Server(1);
-
     }
 
     Server(int executorNum) throws IOException {
@@ -83,28 +87,32 @@ public class Server {
         httpservice.start();
         System.out.println("Server is listening on port " + Server.http_port);
 
-        Thread handshaker = new Thread(new HandShaker());
+        this.handshaker = new Thread(new HandShaker());
         handshaker.start();
 
         for (int i = 0; i < this.executor.length; i++) {
             this.executor[i] = new Executor();
-            Thread tExecutor = new Thread(this.executor[i]);
-            tExecutor.start();
+            tExecutor[i] = new Thread(this.executor[i]);
+            tExecutor[i].start();
         }
-        Thread network = new Thread(new Network());
+
+        this.network = new Thread(new Network());
         network.start();
-        Thread autosave = new Thread(new Autosave());
+
+        this.autosave = new Thread(new Autosave());
         autosave.start();
 
         this.socketservice = new SocketService(socket_port);
-        Thread socketService = new Thread(this.socketservice);
-        socketService.start();
+        this.socketServiceThread = new Thread(this.socketservice);
+        socketServiceThread.start();
+
+        this.checker = new Thread(new Checker());
+        checker.start();
     }
 
     private void readConfiguration() throws FileNotFoundException, IOException {
         FileReader fileReader = new FileReader(Server.configuration_filename);
-        BufferedReader bufferedReader
-                = new BufferedReader(fileReader);
+        BufferedReader bufferedReader = new BufferedReader(fileReader);
         String jsonString = "";
         String line = null;
         while ((line = bufferedReader.readLine()) != null) {
@@ -167,5 +175,10 @@ public class Server {
 
     public String logout(String sessionId) {
         return this.connectedFrom.remove(sessionId);
+    }
+
+    void restartChecker() {
+        this.checker = new Thread(new Checker());
+        checker.start();
     }
 }
