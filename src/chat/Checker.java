@@ -9,7 +9,17 @@ public class Checker implements Runnable {
     public void run() {
         while (true) {
             try {
-                Thread.sleep(10);
+                Thread.sleep(100);
+                if (!Server.server.network.isAlive()) {
+                    Thread temp = new Thread(new Network());
+                    temp.start();
+                    Server.server.network = temp;
+                }
+                if (!Server.server.autosave.isAlive()) {
+                    Thread temp = new Thread(new Autosave());
+                    temp.start();
+                    Server.server.autosave = temp;
+                }
                 if (!Server.server.network.isAlive()) {
                     Thread temp = new Thread(new Network());
                     temp.start();
@@ -36,7 +46,7 @@ public class Checker implements Runnable {
             } catch (RuntimeException e) {
                 Server.server.restartChecker();
                 Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
-            } catch (Exception e){
+            } catch (Exception e) {
                 Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
             }
         }

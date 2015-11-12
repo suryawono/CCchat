@@ -13,7 +13,7 @@ public class SocketService implements Runnable {
     ServerSocket providerSocket;
     Socket connection = null;
     int socket_port;
-    private ArrayList<SocketHandler> clientList;
+    public ArrayList<SocketHandler> clientList;
     
     public boolean isAlive(){
         return this.isAlive();

@@ -22,8 +22,6 @@ import org.json.JSONObject;
  */
 public class Network implements Runnable {
     
-    public boolean isAlive = true;
-
     @Override
     public void run() {
         while (true) {
