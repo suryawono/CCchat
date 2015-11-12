@@ -21,6 +21,8 @@ import org.json.JSONObject;
  * @author CIA
  */
 public class Network implements Runnable {
+    
+    public boolean isAlive = true;
 
     @Override
     public void run() {
@@ -35,11 +37,7 @@ public class Network implements Runnable {
                     body.put("ttl", sc.getTtl());
                     this.send(body);
                 }
-
-            } catch (RuntimeException e) {
-                Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
-                Server.server.restartNetworkThread();
-            } catch (Exception e) {
+            }  catch (Exception e) {                
                 Logger.getLogger(Executor.class.getName()).log(Level.SEVERE, null, e);
             }
         }

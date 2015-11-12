@@ -14,6 +14,10 @@ public class SocketService implements Runnable {
     Socket connection = null;
     int socket_port;
     private ArrayList<SocketHandler> clientList;
+    
+    public boolean isAlive(){
+        return this.isAlive();
+    }
 
     public SocketService(int socket_port) throws IOException {
         this.socket_port = socket_port;
