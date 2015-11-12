@@ -45,3 +45,10 @@ build/built-jar.properties
 build/
 dist/
 nbproject/
+CCchat.jar
+server1.json
+server2.json
+server3.json
+user1.json
+user2.json
+user3.json

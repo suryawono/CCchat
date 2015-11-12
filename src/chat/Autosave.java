@@ -25,6 +25,7 @@ public class Autosave implements Runnable {
             Server.server.user.save();
             Server.server.message.save();
             Server.server.save();
+            System.out.println("Save!!!");
         }
     }
 

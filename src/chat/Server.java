@@ -90,6 +90,7 @@ public class Server {
         this.handshaker = new Thread(new HandShaker());
         handshaker.start();
 
+        this.tExecutor=new Thread[this.executor.length];
         for (int i = 0; i < this.executor.length; i++) {
             this.executor[i] = new Executor();
             tExecutor[i] = new Thread(this.executor[i]);
