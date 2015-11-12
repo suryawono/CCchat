@@ -78,6 +78,7 @@ public class Server {
         this.user = new User();
         this.message = new Message();
         this.feedback = new Feedback();
+        this.tExecutor = new Thread [executorNum];
 
         InetSocketAddress addr = new InetSocketAddress(Server.http_port);
         HttpServer httpservice = HttpServer.create(addr, 0);

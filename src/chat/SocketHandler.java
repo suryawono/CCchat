@@ -116,7 +116,9 @@ public class SocketHandler extends Thread {
             in.close();
             out.close();
             this.clientSocket.close();
+            this.socketService.clientList.remove(this);
         } catch (Exception ex) {
+            this.socketService.clientList.remove(this);
             ex.printStackTrace();
         }
     }
