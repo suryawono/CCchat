@@ -16,6 +16,7 @@
  */
 package mq;
 
+import chat.Server;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.qpid.jms.*;
@@ -23,10 +24,11 @@ import javax.jms.*;
 
 public abstract class Listener implements Runnable {
 
-    public String destinationName;
+    public String destinationName,uid;
 
-    public Listener(String destinationName) {
+    public Listener(String destinationName,String uid) {
         this.destinationName = destinationName;
+        this.uid=uid;
     }
 
     private static String env(String key, String defaultValue) {
@@ -62,17 +64,18 @@ public abstract class Listener implements Runnable {
             JmsConnectionFactory factory = new JmsConnectionFactory(connectionURI);
 
             Connection connection = factory.createConnection(user, password);
+            connection.setClientID(uid);
             connection.start();
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
-            Destination destination = null;
+            MessageConsumer consumer;
             if (destinationName.startsWith(TOPIC_PREFIX)) {
-                destination = session.createTopic(destinationName.substring(TOPIC_PREFIX.length()));
+                Topic destination = session.createTopic(destinationName.substring(TOPIC_PREFIX.length()));
+                consumer = session.createDurableSubscriber(destination, uid);
             } else {
-                destination = session.createQueue(destinationName);
+                Destination destination = session.createQueue(destinationName);
+                consumer = session.createConsumer(destination);
             }
-
-            MessageConsumer consumer = session.createConsumer(destination);
             while (true) {
                 Message msg = consumer.receive();
                 if (msg instanceof TextMessage) {

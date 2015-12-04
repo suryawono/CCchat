@@ -28,7 +28,7 @@ public class AuthExecutor implements Runnable {
                 Command c = Server.server.commandQueue.poll();
                 JSONObject result = new JSONObject();
                 if (c != null) {
-                    System.out.println(c);
+                    boolean skip = false;
                     try {
                         switch (c.getName()) {
                             case "register":
@@ -74,6 +74,13 @@ public class AuthExecutor implements Runnable {
                                     result.put("data", new JSONObject().put("commandrequest", c.getName()));
                                 }
                                 break;
+                            case "updatelat":
+                                skip = true;
+                                this.updateCAT(c.getJsonobject().getJSONArray("users"), c.getJsonobject().getLong("lat"));
+                                result.put("status", Feedback.OK);
+                                result.put("message", Feedback.STATUS_MESSAGE[Feedback.OK]);
+                                result.put("data", new JSONObject());
+                                break;
                         }
                     } catch (JSONException j) {
                         String e = j.toString();
@@ -83,7 +90,9 @@ public class AuthExecutor implements Runnable {
                         result.put("data", new JSONObject().put("missing", m));
                     }
 //                    Server.server.topicFeedbackPublisher.add(new JSONObject().put("queueNumber", c.getQueueNumber()).put("data", result).toString());
-                    Server.server.queueFeedbackPublisherList.get(c.getJsonobject().getString("ipid")).add(result.put("queueNumber", c.getQueueNumber()).toString());
+                    if (!skip) {
+                        Server.server.queueFeedbackPublisherList.get(c.getJsonobject().getString("ipid")).add(result.put("queueNumber", c.getQueueNumber()).toString());
+                    }
                 }
             } catch (InterruptedException | NullPointerException e) {
                 Logger.getLogger(AuthExecutor.class.getName()).log(Level.SEVERE, null, e);
@@ -119,5 +128,13 @@ public class AuthExecutor implements Runnable {
 
     public JSONObject getOnlineList() {
         return Server.server.user.getOnlineList();
+    }
+
+    public void updateCAT(JSONArray users, long lat) {
+        System.out.println("update2");
+        for (Object o : users) {
+            JSONObject jo = (JSONObject) o;
+            Server.server.user.updateCAT(jo.getString("username"), lat);
+        }
     }
 }

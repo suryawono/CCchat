@@ -31,7 +31,7 @@ import org.json.JSONObject;
 public class User {
 
     private HashMap<String, JSONObject> users;
-    public static long maxIdlemaxIdle = 60000 * 60;
+    public static long maxIdlemaxIdle = 10000;
 
     public User() throws IOException {
         this.users = new HashMap();
@@ -138,7 +138,7 @@ public class User {
         String username = this.isValidSessionid(sessionid);
         if (username != null) {
             this.users.get(username).put("sessionid", "");
-            return new JSONObject().put("username", username);
+            return new JSONObject().put("username", username).put("sessionid", sessionid);
         } else {
             return null;
         }
@@ -205,9 +205,8 @@ public class User {
     }
 
     public void updateCAT(String username, long last_activity_time) {
+        System.out.println("update");
         JSONObject d = this.users.get(username);
-        if (Long.compare(d.getLong("last_activity_time"), last_activity_time) < 0) {
-            d.put("last_activity_time", last_activity_time);
-        }
+        d.put("last_activity_time", last_activity_time);
     }
 }

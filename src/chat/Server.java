@@ -72,6 +72,7 @@ public class Server {
     public Thread topicUserstatusListener;
     public Publisher topicServerPublisher;
     public HashMap<String, String> users;
+    public Thread userRipple;
 
     //auth
     public HashMap<String, Thread> queueAuthListenerList;
@@ -104,6 +105,7 @@ public class Server {
         this.feedback = new Feedback();
 
         this.executor = new ChatExecutor[executorNum];
+        String ipid = Server.ip + ":" + Server.http_port;
         switch (type) {
             case "chat":
                 this.users = new HashMap();
@@ -113,7 +115,7 @@ public class Server {
                 this.queueAuthPublisher = new Publisher("auth:" + ip + ":" + http_port);
                 this.topicServerPublisher = new Publisher("topic://server");
                 this.topicServerPublisher.add(new JSONObject().put("ip", Server.ip).put("http_port", Server.http_port).put("socket_port", Server.socket_port).toString());
-                this.topicChatListener = new Thread(new Listener("topic://chat") {
+                this.topicChatListener = new Thread(new Listener("topic://chat", ipid + "-chat") {
 
                     @Override
                     public void extractor(String s) {
@@ -123,20 +125,21 @@ public class Server {
 
                 });
                 this.topicChatListener.start();
-                this.queueFeedbackListener = new Thread(new Listener("feedback:" + ip + ":" + http_port) {
+                this.queueFeedbackListener = new Thread(new Listener("feedback:" + ip + ":" + http_port, ipid + "-feedback") {
                     @Override
                     public void extractor(String s) {
                         JSONObject jo = new JSONObject(s);
                         if (jo.getInt("status") == Feedback.LOGIN_BERHASIL) {
                             users.put(jo.getJSONObject("data").getString("sessionid"), jo.getJSONObject("data").getString("username"));
-                        } else if (jo.getInt("status") == Feedback.LOGIN_BERHASIL) {
+                        } else if (jo.getInt("status") == Feedback.LOGOUT_SUCCESS) {
                             users.remove(jo.getJSONObject("data").getString("sessionid"));
                         }
                         feedback.putResult(jo.getString("queueNumber"), jo);
+                        System.out.println(users);
                     }
                 });
                 this.queueFeedbackListener.start();
-                this.topicUserstatusListener = new Thread(new Listener("topic://userstatus") {
+                this.topicUserstatusListener = new Thread(new Listener("topic://userstatus", ipid + "-userstatus") {
 
                     @Override
                     public void extractor(String s) {
@@ -162,28 +165,29 @@ public class Server {
                     tExecutor[i] = new Thread(this.executor[i]);
                     tExecutor[i].start();
                 }
-
+                this.userRipple = new Thread(new UserRipple());
+                this.userRipple.start();
+                
                 System.out.println("Server is listening on port " + Server.http_port);
                 break;
             case "auth":
                 this.user = new User();
                 this.queueAuthListenerList = new HashMap();
                 this.queueFeedbackPublisherList = new HashMap();
-                this.topicServerListener = new Thread(new Listener("topic://server") {
+                this.topicServerListener = new Thread(new Listener("topic://server", ipid + "-server") {
 
                     @Override
                     public void extractor(String s) {
                         JSONObject jo = new JSONObject(s);
                         String ip = jo.getString("ip");
                         int http_port = jo.getInt("http_port");
-                        queueAuthListenerList.put(ip + ":" + http_port, new Thread(new Listener("auth:" + ip + ":" + http_port) {
+                        queueAuthListenerList.put(ip + ":" + http_port, new Thread(new Listener("auth:" + ip + ":" + http_port, "auth:" + ip + ":" + http_port + "-auth") {
                             @Override
                             public void extractor(String s) {
                                 System.out.println(s);
                                 JSONObject jo = new JSONObject(s);
                                 jo.getJSONObject("data").put("ipid", ip + ":" + http_port);
                                 commandQueue.add(new Command(jo.getString("command"), jo.getJSONObject("data"), jo.getString("queueNumber")));
-                                System.out.println("add command...");
                             }
                         }));
                         queueAuthListenerList.get(ip + ":" + http_port).start();
