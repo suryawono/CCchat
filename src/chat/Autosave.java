@@ -14,6 +14,12 @@ import java.util.logging.Logger;
  */
 public class Autosave implements Runnable {
 
+    public String type;
+
+    public Autosave(String type) {
+        this.type = type;
+    }
+
     @Override
     public void run() {
         while (true) {
@@ -22,9 +28,14 @@ public class Autosave implements Runnable {
             } catch (InterruptedException ex) {
                 Logger.getLogger(Autosave.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Server.server.user.save();
-            Server.server.message.save();
-            Server.server.save();
+            switch (type) {
+                case "chat":
+                    Server.server.message.save();
+                    break;
+                case "auth":
+                    Server.server.user.save();
+                    break;
+            }
             System.out.println("Save!!!");
         }
     }

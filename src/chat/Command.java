@@ -15,22 +15,16 @@ public class Command {
 
     private String name;
     private JSONObject jsonobject;
-    private long queueNumber;
-    private int ttl;
+    private String queueNumber;
 
-    public long getQueueNumber() {
+    public String getQueueNumber() {
         return queueNumber;
     }
 
-    public Command(String name, JSONObject jsonobject, long queueNumber, int ttl) {
+    public Command(String name, JSONObject jsonobject, String queueNumber) {
         this.name = name;
         this.jsonobject = jsonobject;
         this.queueNumber = queueNumber;
-        this.ttl = ttl;
-    }
-
-    public int getTtl() {
-        return ttl;
     }
 
     public String getName() {
@@ -49,6 +43,11 @@ public class Command {
         this.jsonobject = jsonobject;
     }
 
+    public String seril(){
+        JSONObject jo=new JSONObject().put("name", this.name).put("data", this.jsonobject).put("queueNumber", this.queueNumber);
+        return jo.toString();
+    }
+    
     @Override
     public String toString() {
         return this.jsonobject.toString();

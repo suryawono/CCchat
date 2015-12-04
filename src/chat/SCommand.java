@@ -34,20 +34,10 @@ public class SCommand {
 
     private int type;
     private JSONObject jsonobject;
-    private int ttl;
 
-    public SCommand(int type, JSONObject jsonobject, int ttl) {
+    public SCommand(int type, JSONObject jsonobject) {
         this.type = type;
         this.jsonobject = jsonobject;
-        this.ttl = ttl;
-    }
-
-    public int getTtl() {
-        return ttl;
-    }
-
-    public void setTtl(int ttl) {
-        this.ttl = ttl;
     }
 
     public int getType() {
@@ -62,6 +52,10 @@ public class SCommand {
         this.jsonobject = jsonobject;
     }
 
+    public String seril(){
+        return new JSONObject().put("type", type).put("data", this.jsonobject).toString();
+    }
+    
     @Override
     public String toString() {
         return this.jsonobject.toString();

@@ -31,7 +31,7 @@ import org.json.JSONObject;
 public class User {
 
     private HashMap<String, JSONObject> users;
-    public static long maxIdlemaxIdle = 10000;
+    public static long maxIdlemaxIdle = 60000 * 60;
 
     public User() throws IOException {
         this.users = new HashMap();
@@ -126,7 +126,7 @@ public class User {
     public String isValidSessionid(String sessionid) {
         for (Map.Entry<String, JSONObject> entry : this.users.entrySet()) {
             if (entry.getValue().getString("sessionid").equals(sessionid)) {
-                Server.server.scommandQueue.offer(new SCommand(SCommand.CLIENT_ACTIVITY_TIME, new JSONObject().put("username", entry.getKey()).put("last_activity_time", new Date().getTime()), Server.ttl));
+                Server.server.scommandQueue.add(new SCommand(SCommand.CLIENT_ACTIVITY_TIME, new JSONObject().put("username", entry.getKey()).put("last_activity_time", new Date().getTime())));
                 this.users.get(entry.getKey()).put("last_activity_time", new Date().getTime());
                 return entry.getKey();
             }

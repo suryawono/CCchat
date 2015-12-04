@@ -12,7 +12,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetSocketAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -21,6 +24,8 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.JSONObject;
+import mq.*;
+import org.json.JSONArray;
 
 /**
  *
@@ -41,14 +46,14 @@ public class Server {
     public static String password;
     public static String message_filename;
     public static String user_filename;
-    public Executor[] executor;
+    public static String server_filename;
+    public ChatExecutor[] executor;
     public HTTPservice httpservice;
     public SocketService socketservice;
     public JSONObject registeredUser;
     public Message message;
     public User user;
     public Feedback feedback;
-    public HashMap<String, JSONObject> serverList;
     public JSONObject config;
     public HashMap<String, String> connectedFrom;
     public Thread handshaker;
@@ -57,59 +62,147 @@ public class Server {
     public Thread socketServiceThread;
     public Thread checker;
     public Thread[] tExecutor;
+    public JSONObject userstatus;
+
+    //chat
+    public Publisher topicChatPublisher;
+    public Thread topicChatListener;
+    public Publisher queueAuthPublisher;
+    public Thread queueFeedbackListener;
+    public Thread topicUserstatusListener;
+    public Publisher topicServerPublisher;
+    public HashMap<String, String> users;
+
+    //auth
+    public HashMap<String, Thread> queueAuthListenerList;
+    public HashMap<String, Publisher> queueFeedbackPublisherList;
+    public Publisher topicUserstatusPublisher;
+    public Thread topicServerListener;
+    public Thread authExec;
+    public Thread ripple;
+
+    //registry
+    public Registry registry;
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) throws IOException {
         Server.configuration_filename = args[0];
-        Server.server = new Server(1);
+        String type = args[1];
+        Server.server = new Server(1, type);
     }
 
-    Server(int executorNum) throws IOException {
-        this.serverList = new HashMap();
+    Server(int executorNum, String type) throws IOException {
+
         this.connectedFrom = new HashMap();
-        this.commandQueue = new LinkedList();
         this.scommandQueue = new LinkedList();
+        this.commandQueue = new LinkedList();
 
         this.readConfiguration();
-        this.executor = new Executor[executorNum];
-        this.registeredUser = new JSONObject();
-        this.user = new User();
-        this.message = new Message();
+
         this.feedback = new Feedback();
-        this.tExecutor = new Thread[executorNum];
 
-        InetSocketAddress addr = new InetSocketAddress(Server.http_port);
-        HttpServer httpservice = HttpServer.create(addr, 0);
+        this.executor = new ChatExecutor[executorNum];
+        switch (type) {
+            case "chat":
+                this.users = new HashMap();
+                this.message = new Message();
 
-        httpservice.createContext("/", new HTTPservice());
-        httpservice.setExecutor(Executors.newCachedThreadPool());
-        httpservice.start();
-        System.out.println("Server is listening on port " + Server.http_port);
+                this.topicChatPublisher = new Publisher("topic://chat");
+                this.queueAuthPublisher = new Publisher("auth:" + ip + ":" + http_port);
+                this.topicServerPublisher = new Publisher("topic://server");
+                this.topicServerPublisher.add(new JSONObject().put("ip", Server.ip).put("http_port", Server.http_port).put("socket_port", Server.socket_port).toString());
+                this.topicChatListener = new Thread(new Listener("topic://chat") {
 
-        this.handshaker = new Thread(new HandShaker());
-        handshaker.start();
+                    @Override
+                    public void extractor(String s) {
+                        JSONObject jo = new JSONObject(s);
+                        Server.server.message.putMessage(jo.getString("username"), jo.getString("message"), jo.getLong("timestamp"));
+                    }
 
-        this.tExecutor = new Thread[this.executor.length];
-        for (int i = 0; i < this.executor.length; i++) {
-            this.executor[i] = new Executor();
-            tExecutor[i] = new Thread(this.executor[i]);
-            tExecutor[i].start();
+                });
+                this.topicChatListener.start();
+                this.queueFeedbackListener = new Thread(new Listener("feedback:" + ip + ":" + http_port) {
+                    @Override
+                    public void extractor(String s) {
+                        JSONObject jo = new JSONObject(s);
+                        if (jo.getInt("status") == Feedback.LOGIN_BERHASIL) {
+                            users.put(jo.getJSONObject("data").getString("sessionid"), jo.getJSONObject("data").getString("username"));
+                        } else if (jo.getInt("status") == Feedback.LOGIN_BERHASIL) {
+                            users.remove(jo.getJSONObject("data").getString("sessionid"));
+                        }
+                        feedback.putResult(jo.getString("queueNumber"), jo);
+                    }
+                });
+                this.queueFeedbackListener.start();
+                this.topicUserstatusListener = new Thread(new Listener("topic://userstatus") {
+
+                    @Override
+                    public void extractor(String s) {
+                        userstatus = new JSONObject(s);
+                    }
+                });
+                this.topicUserstatusListener.start();
+
+                InetSocketAddress addr = new InetSocketAddress(Server.http_port);
+                HttpServer httpservice = HttpServer.create(addr, 0);
+
+                httpservice.createContext("/", new HTTPservice());
+                httpservice.setExecutor(Executors.newCachedThreadPool());
+                httpservice.start();
+
+                this.socketservice = new SocketService(socket_port);
+                this.socketServiceThread = new Thread(this.socketservice);
+                socketServiceThread.start();
+
+                this.tExecutor = new Thread[this.executor.length];
+                for (int i = 0; i < this.executor.length; i++) {
+                    this.executor[i] = new ChatExecutor();
+                    tExecutor[i] = new Thread(this.executor[i]);
+                    tExecutor[i].start();
+                }
+
+                System.out.println("Server is listening on port " + Server.http_port);
+                break;
+            case "auth":
+                this.user = new User();
+                this.queueAuthListenerList = new HashMap();
+                this.queueFeedbackPublisherList = new HashMap();
+                this.topicServerListener = new Thread(new Listener("topic://server") {
+
+                    @Override
+                    public void extractor(String s) {
+                        JSONObject jo = new JSONObject(s);
+                        String ip = jo.getString("ip");
+                        int http_port = jo.getInt("http_port");
+                        queueAuthListenerList.put(ip + ":" + http_port, new Thread(new Listener("auth:" + ip + ":" + http_port) {
+                            @Override
+                            public void extractor(String s) {
+                                System.out.println(s);
+                                JSONObject jo = new JSONObject(s);
+                                jo.getJSONObject("data").put("ipid", ip + ":" + http_port);
+                                commandQueue.add(new Command(jo.getString("command"), jo.getJSONObject("data"), jo.getString("queueNumber")));
+                                System.out.println("add command...");
+                            }
+                        }));
+                        queueAuthListenerList.get(ip + ":" + http_port).start();
+                        queueFeedbackPublisherList.put(ip + ":" + http_port, new Publisher("feedback:" + ip + ":" + http_port));
+                    }
+                });
+                this.topicServerListener.start();
+                this.topicUserstatusPublisher = new Publisher("topic://userstatus");
+                authExec = new Thread(new AuthExecutor());
+                authExec.start();
+                ripple = new Thread(new AuthRipple());
+                ripple.start();
+                break;
+            case "registry":
+                break;
         }
 
-        this.network = new Thread(new Network());
-        network.start();
-
-        this.autosave = new Thread(new Autosave());
+        this.autosave = new Thread(new Autosave(type));
         autosave.start();
-
-        this.socketservice = new SocketService(socket_port);
-        this.socketServiceThread = new Thread(this.socketservice);
-        socketServiceThread.start();
-
-        this.checker = new Thread(new Checker());
-        checker.start();
     }
 
     private void readConfiguration() throws FileNotFoundException, IOException {
@@ -129,36 +222,9 @@ public class Server {
         Server.password = this.config.getString("password");
         Server.message_filename = this.config.getString("message_filename");
         Server.user_filename = this.config.getString("user_filename");
+        Server.server_filename = this.config.getString("server_filename");
         Server.ip = this.config.getString("ip");
         Server.ttl = Integer.parseInt(this.config.getString("ttl"));
-        for (Object s : this.config.optJSONArray("linked_servers")) {
-            JSONObject jo = new JSONObject(s.toString());
-            this.serverList.put(jo.getString("ip") + ":" + jo.getString("http_port"), jo.put("sessionid", ""));
-        }
-    }
-
-    public void registerServer(String ip, int http_port, int socket_port, String password) {
-        if (!this.serverList.containsKey(ip + ":" + http_port)) {
-            JSONObject s = new JSONObject().put("ip", ip).put("http_port", Integer.toString(http_port)).put("socket_port", Integer.toString(socket_port)).put("password", password).put("sessionid", "");
-            this.config.optJSONArray("linked_servers").put(s);
-            this.serverList.put(s.getString("ip") + ":" + s.getString("http_port"), s);
-        }
-    }
-
-    public String login(String ipID, String password) {
-        if (password.equals(Server.password)) {
-            final Random r = new SecureRandom();
-            byte[] ssid = new byte[32];
-            r.nextBytes(ssid);
-            String encodedSSID = String.format("%064x", new java.math.BigInteger(1, ssid));
-            this.connectedFrom.put(encodedSSID, ipID);
-            return encodedSSID;
-        }
-        return null;
-    }
-
-    public String isValidSession(String sessionid) {
-        return this.connectedFrom.get(sessionid);
     }
 
     private void writeDB() throws FileNotFoundException {
@@ -175,12 +241,21 @@ public class Server {
         }
     }
 
-    public String logout(String sessionId) {
-        return this.connectedFrom.remove(sessionId);
+    public static String generateTicketId() {
+        String id = ip + ":" + http_port + ":";
+        Date d = new Date();
+        long t = d.getTime();
+        return id + Long.toString(t) + "-" + Server.random4c();
     }
 
-    void restartChecker() {
-        this.checker = new Thread(new Checker());
-        checker.start();
+    public static String random4c() {
+        Random r = new Random();
+
+        String alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        String result = "";
+        for (int i = 0; i < 50; i++) {
+            result += alphabet.charAt(r.nextInt(alphabet.length()));
+        }
+        return result;
     }
 }

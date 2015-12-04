@@ -34,12 +34,12 @@ public class SocketMessageBroadcaster implements Runnable {
     public void run() {
         while (true) {
             try {
-                long q = Server.server.feedback.getQueueNumber();
                 JSONObject request = new JSONObject();
                 request.put("sessionid", sessionid).put("timestamp", Long.toString(lastbroadcast));
-                Server.server.commandQueue.add(new Command("getMessage", request, q, 0));
+                String ticket=Server.generateTicketId();
+                Server.server.commandQueue.add(new Command("getMessage", request, ticket));
                 JSONObject r;
-                while ((r = Server.server.feedback.getResponse(q)) == null) {
+                while ((r = Server.server.feedback.getResponse(ticket)) == null) {
                     Thread.sleep(10);
                 }
                 if (r.getInt("status") == 10) {

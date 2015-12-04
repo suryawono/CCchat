@@ -41,7 +41,7 @@ public class Feedback {
     }
 
     public volatile long currentQ;
-    public HashMap<Long, JSONObject> feedbacks;
+    public HashMap<String, JSONObject> feedbacks;
 
     public Feedback() {
         this.currentQ = 1;
@@ -52,11 +52,11 @@ public class Feedback {
         return this.currentQ++;
     }
 
-    public JSONObject getResponse(long queueNumber) {
+    public JSONObject getResponse(String queueNumber) {
         return this.feedbacks.get(queueNumber);
     }
 
-    public void putResult(long queueNumber, JSONObject o) {
+    public void putResult(String queueNumber, JSONObject o) {
         this.feedbacks.put(queueNumber, o);
     }
 

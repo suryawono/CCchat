@@ -60,10 +60,9 @@ public class SocketHandler extends Thread {
                 commandList.add("logoutServer");
                 try {
                     if (commandList.contains(jsonObject.getString("command"))) {
-                        q = Server.server.feedback.getQueueNumber();
-                        int ttl = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : 0;
-                        Server.server.commandQueue.add(new Command(jsonObject.getString("command"), jsonObject.getJSONObject("params"), q, ttl));
-                        while ((r = Server.server.feedback.getResponse(q)) == null) {
+                        String ticket=Server.generateTicketId();
+                        Server.server.commandQueue.add(new Command(jsonObject.getString("command"), jsonObject.getJSONObject("params"), ticket));
+                        while ((r = Server.server.feedback.getResponse(ticket)) == null) {
                             Thread.sleep(10);
                         }
                     } else if (jsonObject.getString("command").equals("ping")) {

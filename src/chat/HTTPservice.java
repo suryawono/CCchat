@@ -57,11 +57,11 @@ public class HTTPservice implements HttpHandler {
             commandList.add("logoutServer");
             try {
                 if (commandList.contains(jsonObject.get("command").toString())) {
-                    q = Server.server.feedback.getQueueNumber();
+                    String ticket=Server.generateTicketId();
                     int ttl = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : 0;
-                    Server.server.commandQueue.add(new Command(jsonObject.get("command").toString(), (JSONObject) jsonObject.get("params"), q, ttl));
+                    Server.server.commandQueue.add(new Command(jsonObject.get("command").toString(), (JSONObject) jsonObject.get("params"), ticket));
                     long startFeedback = new Date().getTime();
-                    while ((r = Server.server.feedback.getResponse(q)) == null) {
+                    while ((r = Server.server.feedback.getResponse(ticket)) == null) {
                         Thread.sleep(10);
                         if (startFeedback + 5000 < new Date().getTime()) {
                             r = new JSONObject();

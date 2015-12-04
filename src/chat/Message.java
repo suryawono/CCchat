@@ -64,9 +64,7 @@ public class Message {
         pw.close();
     }
     
-    public JSONObject putMessage(String username, String message) {
-        Date date = new Date();
-        long timestamp = date.getTime();
+    public JSONObject putMessage(String username, String message,long timestamp) {
         this.messages.offer(new MessageEntity(timestamp, username, message));
         return new JSONObject().put("username", username).put("message", message).put("timestamp", timestamp);
     }
